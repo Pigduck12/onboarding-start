@@ -58,3 +58,4 @@ module pwm_peripheral (
     end
 
 endmodule
+
