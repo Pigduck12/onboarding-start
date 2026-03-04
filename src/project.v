@@ -6,6 +6,7 @@
 `default_nettype none
 
 module tt_um_uwasic_onboarding_eliot_tong (
+    assign uio_oe = 8'hFF;
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
@@ -14,7 +15,6 @@ module tt_um_uwasic_onboarding_eliot_tong (
     input  wire       ena,      // always 1 when the design is powered, so you can ignore it
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
-);
 pwm_peripheral pwm_peripheral_inst (
     .clk(clk),
     .rst_n(rst_n),
