@@ -19,10 +19,12 @@ module spi_peripheral (
     end else begin
       bitShifter <= {bitshifter[6:0],COPI};
       bitcount <= bitcount + 1'b1;
-      if bitcount == 3'b1 begin
+      if bitcount == 3'b111 begin
         bitsCompleted = 1'b1;
+        bitsTransferred = 
       end else begin
         bitCompleted = 1'b0;
+        bitcount <= bitcount +1'b1;
       
     end
   end
