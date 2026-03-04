@@ -8,7 +8,22 @@ module spi_peripheral (
   output reg bitsCompleted
 );
   reg[7:0] bitShifter;
-  reg[2:0] bitount;
+  reg[2:0] bitcount;
   always @(posedge SCLK or posedge CS_n)begin
- 
+    if (CS_n)begin
+      //reset values
+      bitsTransferred <= 8'b0;
+      bitsCompleted <= 1'b0;
+      bitShifter <= 8'b0;
+      bitcount <= 3'b0;
+    end else begin
+      bitShifter <= {bitshifter[6:0],COPI};
+      bitcount <= bitcount + 1'b1;
+      if bitcount == 3'b1 begin
+        bitsCompleted = 1'b1;
+      end else begin
+        bitCompleted = 1'b0;
+      
+    end
   end
+  end module
