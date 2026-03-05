@@ -6,7 +6,7 @@
 `default_nettype none
 module tt_um_uwasic_onboarding_eliot_tong (
   
-  // Create wires to refer to the values of the registers
+  //  Create wires to refer to the values of the registers
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
