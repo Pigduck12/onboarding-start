@@ -33,7 +33,7 @@ pwm_peripheral pwm_peripheral_inst (
     .en_reg_pwm_7_0(en_reg_pwm_7_0),
     .en_reg_pwm_15_8(en_reg_pwm_15_8),
   .out(pwm_raw_outputs),
-    .pwm_duty_cycle(spi_data),  // Use data from SPI
+  .pwm_duty_cycle(pwm_duty_cycle),  // Use data from SPI
   .spi_data_updated(spi_ready)
   );
   spi_peripheral spi_peripheral_inst(
@@ -42,7 +42,6 @@ pwm_peripheral pwm_peripheral_inst (
     .SCLK(ui_in[0]), //what does this mean
     .COPI(ui_in[1]),
     .CS_n(ui_in[2]),
-    .SS(1'b0),
     .CIPO(uo_out[0]),
     .bitsTransferred(spi_data), // Bridge to PWM
     .bitCompleted(spi_ready)
@@ -50,6 +49,7 @@ pwm_peripheral pwm_peripheral_inst (
   // All output pins must be assigned. If not used, assign to 0.
   
   // Example: ou_out is the sum of ui_in and uio_in
+  assign pwm_duty_cycle = spi_data;
   assign en_reg_out_7_0 = 8'hFF;   // Enable all outputs
   assign en_reg_pwm_7_0 = 8'hFF;
   assign en_reg_out_15_8 = 8'hFF; // All 8 bits set to 1 (Enabled)
@@ -59,6 +59,6 @@ pwm_peripheral pwm_peripheral_inst (
   assign uo_out[7:1]  = pwm_raw_outputs[7:1];
 
   // List all unused inputs to prevent warnings
-    wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0};
-
+  wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0,pwm_raw_outputs[0]};
+    
 endmodule
