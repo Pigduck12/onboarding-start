@@ -1,7 +1,110 @@
 # SPDX-FileCopyrightText: © 2024 Tiny Tapeout
 # SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: © 2024 Tiny Tapeout
+# SPDX-License-Identifier: Apache-2.0
 
 import cocotb
+from cocotb.clock import Clock
+from cocotb.triggers import ClockCycles, RisingEdge, FallingEdge
+from cocotb.types import LogicArray
+
+async def await_half_sclk(dut):
+    """Wait for 5 clock cycles (500ns at 10MHz)."""
+    await ClockCycles(dut.clk, 5)
+
+def ui_in_logicarray(ncs, bit, sclk):
+    """Setup the ui_in value: [7:3] unused, [2]=CS_n, [1]=COPI, [0]=SCLK."""
+    return LogicArray(f"00000{ncs}{bit}{sclk}")
+
+async def send_spi_transaction(dut, r_w, address, data):
+    """
+    Synchronized SPI transaction for 16-bit word:
+    [15]: R/W, [14:8]: Address, [7:0]: Data
+    """
+    data_int = int(data) if isinstance(data, LogicArray) else data
+    
+    # Combine RW and 7-bit Address into top byte, Data into bottom byte 
+    full_word = (int(r_w) << 15) | ((address & 0x7F) << 8) | (data_int & 0xFF)
+
+    # Start transaction - pull CS_n low 
+    ncs, sclk, bit = 0, 0, 0
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    await ClockCycles(dut.clk, 10)
+
+    # Send 16 bits to match 'if (bitcount == 4'd15)' 
+    for i in range(16):
+        bit = (full_word >> (15 - i)) & 0x1
+        
+        # SCLK Low: Set Data
+        sclk = 0
+        dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+        await ClockCycles(dut.clk, 10) 
+        
+        # SCLK High: Hardware samples COPI [cite: 9]
+        sclk = 1
+        dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+        await ClockCycles(dut.clk, 10) 
+
+    # Finalize: Drop SCLK then raise CS_n to latch [cite: 8, 12]
+    sclk = 0
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    await ClockCycles(dut.clk, 10)
+    
+    ncs = 1
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    await ClockCycles(dut.clk, 10)
+
+@cocotb.test()
+async def test_spi(dut):
+    dut._log.info("Start SPI test")
+    clock = Clock(dut.clk, 100, units="ns")
+    cocotb.start_soon(clock.start())
+
+    # Reset Hardware [cite: 3]
+    dut.ena.value = 1
+    dut.ui_in.value = ui_in_logicarray(1, 0, 0)
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 10)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 10)
+
+    # Write 0xF0 to Address 0x00 (reg_uo_en) 
+    await send_spi_transaction(dut, 1, 0x00, 0xF0)
+    
+    # Debug Internal State [cite: 13]
+    spi_data = dut.user_project.spi_peripheral_inst.bitsTransferred.value
+    ready = dut.user_project.spi_peripheral_inst.bitCompleted.value
+    dut._log.info(f"SPI Data Internal: {hex(int(spi_data))}")
+    dut._log.info(f"SPI Ready Pulse: {ready}")
+
+    # Verify Output: uo_out[7:1] should be 0xF0[7:1] = 0x78 [cite: 46]
+    actual_val = (int(dut.uo_out.value) >> 1)
+    expected_val = (0xF0 >> 1)
+    assert actual_val == expected_val, f"Mismatch: {hex(actual_val)} != {hex(expected_val)}"
+
+@cocotb.test()
+async def test_pwm_duty(dut):
+    dut._log.info("Starting PWM Duty Cycle test")
+    clock = Clock(dut.clk, 100, units="ns")
+    cocotb.start_soon(clock.start())
+    
+    # Enable PWM on uo_out[1] (Address 0x02, bit 1) [cite: 10, 46]
+    await send_spi_transaction(dut, 1, 0x02, 0x02)
+    # Set Duty Cycle to ~25% (64/256) [cite: 11, 19]
+    await send_spi_transaction(dut, 1, 0x04, 0x40)
+    
+    # Measure logic
+    await RisingEdge(dut.uo_out[1])
+    t1 = cocotb.utils.get_sim_time(units='ns')
+    await FallingEdge(dut.uo_out[1])
+    t2 = cocotb.utils.get_sim_time(units='ns')
+    await RisingEdge(dut.uo_out[1])
+    t3 = cocotb.utils.get_sim_time(units='ns')
+    
+    duty = ((t2 - t1) / (t3 - t1)) * 100
+    dut._log.info(f"Measured Duty Cycle: {duty:.2f}%")
+    assert 20 <= duty <= 30
+"""import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb.triggers import ClockCycles
@@ -9,19 +112,20 @@ from cocotb.types import Logic
 from cocotb.types import LogicArray
 
 async def await_half_sclk(dut):
-    """Wait for the SCLK signal to go high or low.
+    # Wait for the SCLK signal to go high or low.
     start_time = cocotb.utils.get_sim_time(units="ns")
     while True:
         await ClockCycles(dut.clk, 1)
         # Wait for half of the SCLK period (10 us)
         if (start_time + 100*100*0.5) < cocotb.utils.get_sim_time(units="ns"):
             break
-            """
     await ClockCycles(dut.clk, 5)
     return
 
+"""
+"""
 def ui_in_logicarray(ncs, bit, sclk):
-    """Setup the ui_in value as a LogicArray."""
+    #setup the ui_in value as a LogicArray.
     return LogicArray(f"00000{ncs}{bit}{sclk}")
 
 async def send_spi_transaction(dut, r_w, address, data):
@@ -67,7 +171,7 @@ async def send_spi_transaction(dut, r_w, address, data):
     await ClockCycles(dut.clk, 10)
     
     return ui_in_logicarray(ncs, bit, sclk)
-
+"""
 
 """async def send_spi_transaction(dut, r_w, address, data):
     Send an SPI transaction with format:
@@ -130,7 +234,7 @@ async def send_spi_transaction(dut, r_w, address, data):
     await ClockCycles(dut.clk, 600)
     return ui_in_logicarray(ncs, bit, sclk)
     """
-
+"""
 @cocotb.test()
 async def test_spi(dut):
     dut._log.info("Start SPI test")
@@ -212,3 +316,4 @@ async def test_pwm_freq(dut):
 async def test_pwm_duty(dut):
     # Write your test here
     dut._log.info("PWM Duty Cycle test completed successfully")
+    """
