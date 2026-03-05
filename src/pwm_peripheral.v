@@ -14,7 +14,7 @@ module pwm_peripheral (
     input  wire [7:0] en_reg_pwm_15_8,
     input  wire [7:0] pwm_duty_cycle,
     input wire spi_data_updated,
-    output reg out
+    output reg [15:0] out
 );
 
     localparam clk_div_trig = 12; // Divide by (12+1)*256, yielding 3000 (3004.80769) Hz
@@ -71,6 +71,7 @@ module pwm_peripheral (
     end
 
 endmodule
+
 
 
 
