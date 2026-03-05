@@ -36,7 +36,7 @@ pwm_peripheral pwm_peripheral_inst (
     .pwm_duty_cycle(spi_data),  // Use data from SPI
   .spi_data_updated(spi_ready)
   );
-  spi_peripheral spi_peripheral_int(
+  spi_peripheral spi_peripheral_inst(
     .clk(clk),
     .rst_n(rst_n),
     .SCLK(ui_in[0]), //what does this mean
