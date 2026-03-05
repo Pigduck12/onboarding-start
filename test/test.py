@@ -110,8 +110,8 @@ async def test_spi(dut):
     await ClockCycles(dut.clk, 10)
     actual_val = (int(dut.uo_out.value) >> 1)
     expected_val = (0xF0 >> 1)
-    dut._log.info(f"SPI Data Received: {hex(int(dut.spi_peripheral_inst.bitsTransferred.value))}")
-    dut._log.info(f"SPI Ready Pulse: {dut.spi_peripheral_inst.bitCompleted.value}")
+    dut._log.info(f"SPI Data Received: {hex(int(dut.user_project.spi_peripheral_inst.bitsTransferred.value))}")
+    dut._log.info(f"SPI Ready Pulse: {dut.user_project.spi_peripheral_inst.bitCompleted.value}")
     assert actual_val == expected_val, f"Mismatch: {hex(actual_val)} != {hex(expected_val)}"
     await ClockCycles(dut.clk, 1000) 
 
