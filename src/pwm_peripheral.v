@@ -4,7 +4,7 @@
  */
 
 `default_nettype none
-
+//hi
 module pwm_peripheral (
     input  wire       clk,      // clock
     input  wire       rst_n,     // reset_n - low to reset
@@ -71,6 +71,7 @@ module pwm_peripheral (
     end
 
 endmodule
+
 
 
 
