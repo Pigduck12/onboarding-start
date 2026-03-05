@@ -56,9 +56,9 @@ pwm_peripheral pwm_peripheral_inst (
   // All output pins must be assigned. If not used, assign to 0.
   
   // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = (en_reg_pwm_15_8 & pwm_raw_outputs[15:8]) | (~en_reg_pwm_15_8 & en_reg_out_15_8);
+  assign uio_out = (|en_reg_pwm_15_8 & pwm_raw_outputs[15:8]) | (~en_reg_pwm_15_8 & en_reg_out_15_8);
   assign uio_oe  = 8'hFF;
-  assign uo_out[7:1] = (en_reg_pwm_7_0[7:1]) ? pwm_raw_outputs[7:1] : en_reg_out_7_0[7:1];
+  assign uo_out[7:1] = (|en_reg_pwm_7_0[7:1]) ? pwm_raw_outputs[7:1] : en_reg_out_7_0[7:1];
   assign pwm_raw_outputs = {16{w_pwm_signal}};
 
   // List all unused inputs to prevent warnings
