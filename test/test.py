@@ -17,7 +17,7 @@ async def await_half_sclk(dut):
         if (start_time + 100*100*0.5) < cocotb.utils.get_sim_time(units="ns"):
             break
             """
-        await ClockCycles(dut.clk, 5)
+    await ClockCycles(dut.clk, 5)
     return
 
 def ui_in_logicarray(ncs, bit, sclk):
