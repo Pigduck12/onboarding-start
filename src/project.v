@@ -23,6 +23,7 @@ module tt_um_uwasic_onboarding_eliot_tong (
     wire [7:0] en_reg_pwm_7_0;
     wire [7:0] en_reg_pwm_15_8;
     wire [7:0] pwm_duty_cycle;
+  wire [15:0] pwm_raw_outputs;
 pwm_peripheral pwm_peripheral_inst (
     .clk(clk),
     .rst_n(rst_n),
@@ -31,12 +32,22 @@ pwm_peripheral pwm_peripheral_inst (
     .en_reg_pwm_7_0(en_reg_pwm_7_0),
     .en_reg_pwm_15_8(en_reg_pwm_15_8),
     .pwm_duty_cycle(pwm_duty_cycle),
-    .out({uio_out, uo_out})
+  .out(pwm_raw_outputs)
   );
+  spi_peripheral spi_peripheral_int(
+    .clk(clk),
+    .rst_n(rst_n),
+    .SCLK(ui_in[0]), //what does this mean
+    .COPI(ui_in[1]),
+    .CS_n(ui_in[2]),
+    .CIPO(uo_out[0])
+  ); //create what needs to go into spiperipheral
   // All output pins must be assigned. If not used, assign to 0.
-  //assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  //ssign uio_out = 0;
-  //assign uio_oe  = 0;
+  
+  // Example: ou_out is the sum of ui_in and uio_in
+  assign uio_out = pwm_raw_outputs[15:8];
+  assign uio_oe  = 8'hFF;
+  assign uo_out[7:1]  = pwm_raw_outputs[7:1];
 
   // List all unused inputs to prevent warnings
     wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0};
