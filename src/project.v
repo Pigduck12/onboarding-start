@@ -4,7 +4,6 @@
  */
 
 `default_nettype none
-//hi
 module tt_um_uwasic_onboarding_eliot_tong (
   
   // Create wires to refer to the values of the registers
