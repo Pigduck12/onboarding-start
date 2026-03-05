@@ -30,7 +30,7 @@ module tt_um_uwasic_onboarding_eliot_tong (
 pwm_peripheral pwm_peripheral_inst (
     .clk(clk),
     .rst_n(rst_n),
-    .en_reg_out_7_0(en_reg_out_7_0), //what does this mean
+    .en_reg_out_7_0(en_reg_out_7_0), //
     .en_reg_out_15_8(en_reg_out_15_8),
     .en_reg_pwm_7_0(en_reg_pwm_7_0),
     .en_reg_pwm_15_8(en_reg_pwm_15_8),
@@ -41,7 +41,7 @@ pwm_peripheral pwm_peripheral_inst (
   spi_peripheral spi_peripheral_inst(
     .clk(clk),
     .rst_n(rst_n),
-    .SCLK(ui_in[0]), //what does this mean
+    .SCLK(ui_in[0]), //
     .COPI(ui_in[1]),
     .CS_n(ui_in[2]),
     .CIPO(uo_out[0]),
@@ -56,12 +56,12 @@ pwm_peripheral pwm_peripheral_inst (
   // All output pins must be assigned. If not used, assign to 0.
   
   // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = (en_reg_pwm_15_8) ? pwm_raw_outputs[15:8] : en_reg_out_15_8;
+  assign uio_out = (en_reg_pwm_15_8 & pwm_raw_outputs[15:8]) | (~en_reg_pwm_15_8 & en_reg_out_15_8);
   assign uio_oe  = 8'hFF;
-  assign uo_out[7:1]  = (en_reg_pwm_7_0[7:1]) ? pwm_raw_outputs[7:1] : en_reg_out_7_0[7:1];
+  assign uo_out[7:1] = (en_reg_pwm_7_0[7:1]) ? pwm_raw_outputs[7:1] : en_reg_out_7_0[7:1];
   assign pwm_raw_outputs = {16{w_pwm_signal}};
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0,pwm_raw_outputs[0]};
+  wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0,pwm_raw_outputs[0],spi_data};
     
 endmodule
