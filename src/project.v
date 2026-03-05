@@ -32,7 +32,9 @@ pwm_peripheral pwm_peripheral_inst (
     .en_reg_pwm_7_0(en_reg_pwm_7_0),
     .en_reg_pwm_15_8(en_reg_pwm_15_8),
     .pwm_duty_cycle(pwm_duty_cycle),
-  .out(pwm_raw_outputs)
+    .out(pwm_raw_outputs)
+    .pwm_duty_cycle(spi_data),  // Use data from SPI
+    .spi_data_updated(spi_ready
   );
   spi_peripheral spi_peripheral_int(
     .clk(clk),
@@ -41,10 +43,13 @@ pwm_peripheral pwm_peripheral_inst (
     .COPI(ui_in[1]),
     .CS_n(ui_in[2]),
     .CIPO(uo_out[0])
+    .bitsTransferred(spi_data), // Bridge to PWM
+    .bitCompleted(spi_ready)
   ); //create what needs to go into spiperipheral
   // All output pins must be assigned. If not used, assign to 0.
   
   // Example: ou_out is the sum of ui_in and uio_in
+  assign pwm_duty_cycle = bitsTransferred;
   assign uio_out = pwm_raw_outputs[15:8];
   assign uio_oe  = 8'hFF;
   assign uo_out[7:1]  = pwm_raw_outputs[7:1];
