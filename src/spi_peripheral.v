@@ -11,27 +11,33 @@ module spi_peripheral (
 );
   reg[7:0] bitShifter;
   reg[2:0] bitcount;
+  reg sclk_prev; // To store the previous state of SCLK
   assign CIPO = bitShifter[7];
-  always @(posedge SCLK or posedge CS_n or negedge rst_n)begin //this starts 
+  always @(posedge clk or negedge rst_n)begin //this starts 
+    if (!rst_n) begin
+            // Total Hardware Reset
+            bitcount     <= 3'b0;
+            bitShifter   <= 8'b0;
+            bitCompleted <= 1'b0;
+            sclk_prev    <= 1'b0;
+            bitsTransferred <= 8'b0; 
+    end else begin
+      sclk_prev <= SCLK;
     if (CS_n)begin //closed
-      //reset values
+      bitcount     <= 3'b0;
       bitCompleted <= 1'b0;
-      bitShifter <= 8'b0;
-      bitcount <= 3'b0;
-    end else if (CS_n) begin 
-        bitCompleted    <= 1'b0;
-        bitShifter      <= 8'b0;
-        bitcount        <= 3'b0;  
-    end else begin //close
-      bitShifter <= {bitShifter[6:0],COPI};
+      bitCompleted <= 1'b0;
+    end else if (SCLK && !sclk_prev) begin 
+        bitShifter <= {bitShifter[6:0],COPI};
+        bitCompleted <= 1'b0;
+        bitcount <= bitcount + 1'b1;
       if (bitcount == 3'b111) begin //close
         bitCompleted <= ~bitCompleted;
         bitsTransferred <= {bitShifter[6:0],COPI}; 
         bitcount <= 3'b0;
       end else begin //close
-        bitCompleted <= 1'b0;
-        bitcount <= bitcount + 1'b1;
     end
   end
+    end
   end
   endmodule
