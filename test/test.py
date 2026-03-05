@@ -25,7 +25,51 @@ def ui_in_logicarray(ncs, bit, sclk):
     return LogicArray(f"00000{ncs}{bit}{sclk}")
 
 async def send_spi_transaction(dut, r_w, address, data):
-    """
+    # Convert data to int if it's a LogicArray
+    data_int = int(data) if isinstance(data, LogicArray) else data
+    
+    # Combine RW (bit 15) and 7-bit Address (bits 14-8)
+    # This matches bitShifter[14:8] in your Verilog [cite: 10]
+    first_byte = (int(r_w) << 7) | (address & 0x7F)
+    full_word = (first_byte << 8) | (data_int & 0xFF)
+
+    # Start transaction - pull CS low
+    ncs = 0
+    sclk = 0
+    bit = 0
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    await ClockCycles(dut.clk, 10)
+
+    # Send 16 bits total to satisfy bitcount == 4'd15 
+    for i in range(16):
+        bit = (full_word >> (15 - i)) & 0x1
+        
+        # 1. Set Data with SCLK Low
+        sclk = 0
+        dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+        await ClockCycles(dut.clk, 10) # Setup time
+        
+        # 2. Raise SCLK
+        # Verilog triggers on (SCLK && !sclk_prev) 
+        sclk = 1
+        dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+        await ClockCycles(dut.clk, 10) # Hold time
+
+    # 3. Finalize: Set SCLK low BEFORE raising CS
+    sclk = 0
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    await ClockCycles(dut.clk, 10)
+
+    # 4. Pull CS high to end transaction
+    # This resets bitcount to 0 in your Verilog [cite: 8]
+    ncs = 1
+    dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+    await ClockCycles(dut.clk, 10)
+    
+    return ui_in_logicarray(ncs, bit, sclk)
+
+
+"""async def send_spi_transaction(dut, r_w, address, data):
     Send an SPI transaction with format:
     - 1 bit for Read/Write
     - 7 bits for address
@@ -35,7 +79,7 @@ async def send_spi_transaction(dut, r_w, address, data):
     - r_w: boolean, True for write, False for read
     - address: int, 7-bit address (0-127)
     - data: LogicArray or int, 8-bit data
-    """
+   
     # Convert data to int if it's a LogicArray
     if isinstance(data, LogicArray):
         data_int = int(data)
@@ -85,6 +129,7 @@ async def send_spi_transaction(dut, r_w, address, data):
     dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
     await ClockCycles(dut.clk, 600)
     return ui_in_logicarray(ncs, bit, sclk)
+    """
 
 @cocotb.test()
 async def test_spi(dut):
