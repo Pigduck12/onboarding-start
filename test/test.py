@@ -9,13 +9,15 @@ from cocotb.types import Logic
 from cocotb.types import LogicArray
 
 async def await_half_sclk(dut):
-    """Wait for the SCLK signal to go high or low."""
+    """Wait for the SCLK signal to go high or low.
     start_time = cocotb.utils.get_sim_time(units="ns")
     while True:
         await ClockCycles(dut.clk, 1)
         # Wait for half of the SCLK period (10 us)
         if (start_time + 100*100*0.5) < cocotb.utils.get_sim_time(units="ns"):
             break
+            """
+        await ClockCycles(dut.clk, 5)
     return
 
 def ui_in_logicarray(ncs, bit, sclk):
