@@ -26,16 +26,16 @@ module spi_peripheral (
     if (CS_n)begin //closed
       bitcount     <= 3'b0;
       bitCompleted <= 1'b0;
-      bitCompleted <= 1'b0;
     end else if (SCLK && !sclk_prev) begin 
         bitShifter <= {bitShifter[6:0],COPI};
         bitCompleted <= 1'b0;
         bitcount <= bitcount + 1'b1;
       if (bitcount == 3'b111) begin //close
-        bitCompleted <= ~bitCompleted;
+        bitCompleted <= 1'b1;
         bitsTransferred <= {bitShifter[6:0],COPI}; 
         bitcount <= 3'b0;
       end else begin //close
+        bitCompleted <= 1'b0;
     end
   end
     end
