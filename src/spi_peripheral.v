@@ -40,7 +40,7 @@ module spi_peripheral (
         bitCompleted <= 1'b0;
         bitcount <= bitcount + 1'b1;
       if (bitcount == 4'd15) begin //close
-        case (bitShifter[14:8])
+        case ({bitShifter[13:0], COPI} >> 8)
             7'h00 : reg_uo_en <= {bitShifter[6:0],COPI}; 
             7'h01 : reg_uio_en <= {bitShifter[6:0],COPI};
             7'h02 : reg_pwm_uo_sel <= {bitShifter[6:0],COPI};
