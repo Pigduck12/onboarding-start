@@ -12,12 +12,16 @@ module spi_peripheral (
   reg[7:0] bitShifter;
   reg[2:0] bitcount;
   
-  always @(posedge SCLK or posedge CS_n)begin //this starts 
+  always @(posedge SCLK or posedge CS_n or negedge rst_n)begin //this starts 
     if (CS_n)begin //closed
       //reset values
       bitCompleted <= 1'b0;
       bitShifter <= 8'b0;
       bitcount <= 3'b0;
+    end else if (CS_n) begin 
+        bitCompleted    <= 1'b0;
+        bitShifter      <= 8'b0;
+        bitcount        <= 3'b0;  
     end else begin //close
       bitShifter <= {bitShifter[6:0],COPI};
       if (bitcount == 3'b111) begin //close
