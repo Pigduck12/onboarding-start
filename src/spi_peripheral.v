@@ -1,6 +1,5 @@
 module spi_peripheral (
   input wire CS_n,
-  input wire SS,
   input wire COPI,
   input wire SCLK,
   input wire clk,
