@@ -11,7 +11,7 @@ module spi_peripheral (
 );
   reg[7:0] bitShifter;
   reg[2:0] bitcount;
-  
+  assign CIPO = bitShifter[7];
   always @(posedge SCLK or posedge CS_n or negedge rst_n)begin //this starts 
     if (CS_n)begin //closed
       //reset values
