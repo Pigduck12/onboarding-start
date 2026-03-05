@@ -74,10 +74,11 @@ async def send_spi_transaction(dut, r_w, address, data):
         # SCLK high, keep COPI
         sclk = 1
         dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
+        await ClockCycles(dut.clk, 5)  # Setup time: Let the bit settle
         await await_half_sclk(dut)
     # End transaction - return CS high
     sclk = 0
-    ncs = 1
+    ncs = 1 #latch event
     bit = 0
     dut.ui_in.value = ui_in_logicarray(ncs, bit, sclk)
     await ClockCycles(dut.clk, 600)
@@ -109,6 +110,8 @@ async def test_spi(dut):
     await ClockCycles(dut.clk, 10)
     actual_val = (int(dut.uo_out.value) >> 1)
     expected_val = (0xF0 >> 1)
+    dut._log.info(f"SPI Data Received: {hex(int(dut.spi_peripheral_inst.bitsTransferred.value))}")
+    dut._log.info(f"SPI Ready Pulse: {dut.spi_peripheral_inst.bitCompleted.value}")
     assert actual_val == expected_val, f"Mismatch: {hex(actual_val)} != {hex(expected_val)}"
     await ClockCycles(dut.clk, 1000) 
 
