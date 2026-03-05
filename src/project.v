@@ -25,7 +25,6 @@ module tt_um_uwasic_onboarding_eliot_tong (
     wire [7:0] en_reg_pwm_15_8;
     wire [7:0] pwm_duty_cycle;
     wire [15:0] pwm_raw_outputs;
-    wire       w_pwm_signal;
   
 pwm_peripheral pwm_peripheral_inst (
     .clk(clk),
@@ -36,7 +35,7 @@ pwm_peripheral pwm_peripheral_inst (
     .en_reg_pwm_15_8(en_reg_pwm_15_8),
   .pwm_duty_cycle(pwm_duty_cycle),  // Use data from SPI
   .spi_data_updated(spi_ready),
-  .out(w_pwm_signal)
+  .out(pwm_raw_outputs)
   );
   spi_peripheral spi_peripheral_inst(
     .clk(clk),
@@ -59,8 +58,6 @@ pwm_peripheral pwm_peripheral_inst (
   assign uio_out = (|en_reg_pwm_15_8 & pwm_raw_outputs[15:8]) | (~en_reg_pwm_15_8 & en_reg_out_15_8);
   assign uio_oe  = 8'hFF;
   assign uo_out[7:1] = (|en_reg_pwm_7_0[7:1]) ? pwm_raw_outputs[7:1] : en_reg_out_7_0[7:1];
-  assign pwm_raw_outputs = {16{w_pwm_signal}};
-
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, ui_in[7:3], uio_in, 1'b0,pwm_raw_outputs[0],spi_data};
     
