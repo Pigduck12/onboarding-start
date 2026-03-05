@@ -8,8 +8,6 @@
 module tt_um_uwasic_onboarding_eliot_tong (
   
   // Create wires to refer to the values of the registers
-    wire [7:0] spi_data;  // Holds data from SPI to pass to PWM
-    wire spi_ready;       // Signal from SPI to PWM that data is updated
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
@@ -19,7 +17,8 @@ module tt_um_uwasic_onboarding_eliot_tong (
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
 );
-    assign uio_oe = 8'hFF; // Set all IOs to output
+    wire [7:0] spi_data;  // Holds data from SPI to pass to PWM
+    wire spi_ready;       // Signal from SPI to PWM that data is updated
     wire [7:0] en_reg_out_7_0;
     wire [7:0] en_reg_out_15_8;
     wire [7:0] en_reg_pwm_7_0;
@@ -53,6 +52,8 @@ pwm_peripheral pwm_peripheral_inst (
   // Example: ou_out is the sum of ui_in and uio_in
   assign en_reg_out_7_0 = 8'hFF;   // Enable all outputs
   assign en_reg_pwm_7_0 = 8'hFF;
+  assign en_reg_out_15_8 = 8'hFF; // All 8 bits set to 1 (Enabled)
+  assign en_reg_pwm_15_8 = 8'hFF; // All 8 bits set to 1 (PWM Mode)
   assign uio_out = pwm_raw_outputs[15:8];
   assign uio_oe  = 8'hFF;
   assign uo_out[7:1]  = pwm_raw_outputs[7:1];
