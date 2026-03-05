@@ -4,7 +4,7 @@ module spi_peripheral (
   input wire COPI,
   input wire SCLK,
   input wire clk,
-  input wire rst_n
+  input wire rst_n,
   output wire CIPO,
   output reg[7:0] bitsTransferred,
   output reg bitCompleted
