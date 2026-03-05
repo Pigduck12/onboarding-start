@@ -36,7 +36,7 @@ pwm_peripheral pwm_peripheral_inst (
     .en_reg_pwm_15_8(en_reg_pwm_15_8),
   .pwm_duty_cycle(pwm_duty_cycle),  // Use data from SPI
   .spi_data_updated(spi_ready),
-  .pwm_out(w_pwm_signal)
+  .out(w_pwm_signal)
   );
   spi_peripheral spi_peripheral_inst(
     .clk(clk),
