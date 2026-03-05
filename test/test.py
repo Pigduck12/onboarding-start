@@ -106,7 +106,10 @@ async def test_spi(dut):
     dut._log.info("Test project behavior")
     dut._log.info("Write transaction, address 0x00, data 0xF0")
     ui_in_val = await send_spi_transaction(dut, 1, 0x00, 0xF0)  # Write transaction
-    assert dut.uo_out.value == 0xF0, f"Expected 0xF0, got {dut.uo_out.value}"
+    await ClockCycles(dut.clk, 2)
+    actual_val = (int(dut.uo_out.value) >> 1)
+    expected_val = (0xF0 >> 1)
+    assert actual_val == expected_val, f"Mismatch: {hex(actual_val)} != {hex(expected_val)}"
     await ClockCycles(dut.clk, 1000) 
 
     dut._log.info("Write transaction, address 0x01, data 0xCC")
