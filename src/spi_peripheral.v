@@ -30,6 +30,8 @@ module spi_peripheral (
         bitCompleted <= 1'b0;
         bitcount <= bitcount + 1'b1;
       if (bitcount == 4'd15) begin //close
+        case ()
+          
         bitCompleted <= 1'b1;
         bitsTransferred <= {bitShifter[6:0],COPI}; 
         bitcount <= 4'b0;
