@@ -32,11 +32,11 @@ module spi_peripheral (
             reg_pwm_duty    <= 8'h00;
     end else begin
       sclk_prev <= SCLK;
-    if (SCLK && !sclk_prev) begin 
+      if (SCLK && !sclk_prev && !CS_n) begin 
       bitShifter <= {bitShifter[14:0],COPI};
         bitCompleted <= 1'b0;
         bitcount <= bitcount + 1'b1;
-      if (bitcount == 4'd15) begin //close
+      if (bitcount == 4'd15) begin 
         case (({bitShifter[14:0], COPI} >> 8) & 7'h7f) 
             7'h00 : reg_uo_en <= {bitShifter[6:0],COPI}; 
             7'h01 : reg_uio_en <= {bitShifter[6:0],COPI};
@@ -51,10 +51,11 @@ module spi_peripheral (
       end else begin //close
         bitCompleted <= 1'b0;
     end
+    end
     else if (CS_n)begin //closed
       bitcount     <= 4'b0;
       bitCompleted <= 1'b0;
-  end
     end
+  end
   end
   endmodule
