@@ -50,12 +50,12 @@ module spi_peripheral (
         bitcount <= 4'b0;
       end else begin //close
         bitCompleted <= 1'b0;
-    end
+        end
     end
     else if (CS_n)begin //closed
       bitcount     <= 4'b0;
       bitCompleted <= 1'b0;
+      end
     end
-  end
   end
   endmodule
