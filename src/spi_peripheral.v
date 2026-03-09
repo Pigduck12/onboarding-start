@@ -20,37 +20,48 @@ module spi_peripheral (
 
 always @(posedge clk or negedge rst_n) begin 
     if (!rst_n) begin
-        // ... (Reset everything as you have it) ...
+        bitcount        <= 4'b0;
+        bitShifter      <= 16'b0;
+        bitCompleted    <= 1'b0;
+        sclk_prev       <= 1'b0;
+        bitsTransferred <= 8'b0; 
+        reg_uo_en       <= 8'h00;
+        reg_uio_en      <= 8'h00;
+        reg_pwm_uo_sel  <= 8'h00;
+        reg_pwm_uio_sel <= 8'h00;
+        reg_pwm_duty    <= 8'h00;
     end else begin
         sclk_prev <= SCLK;
 
-        // 1. PRIMARY SPI LOGIC: Only shift if CS_n is LOW
-        if (!CS_n) begin 
-            if (SCLK && !sclk_prev) begin 
-                bitShifter <= {bitShifter[14:0], COPI};
-                bitcount   <= bitcount + 1'b1;
+        // 1. HIGHEST PRIORITY: The Clock Edge
+        // If we see a valid rising edge while CS_n is low, process it immediately.
+        if (!CS_n && SCLK && !sclk_prev) begin 
+            bitShifter <= {bitShifter[14:0], COPI};
+            bitcount   <= bitcount + 1'b1;
 
-                if (bitcount == 4'd15) begin 
-                    case (({bitShifter[14:0], COPI} >> 8) & 16'h007f) 
-                        16'h0000 : reg_uo_en       <= {bitShifter[6:0], COPI}; 
-                        16'h0001 : reg_uio_en      <= {bitShifter[6:0], COPI};
-                        16'h0002 : reg_pwm_uo_sel  <= {bitShifter[6:0], COPI};
-                        16'h0003 : reg_pwm_uio_sel <= {bitShifter[6:0], COPI};
-                        16'h0004 : reg_pwm_duty    <= {bitShifter[6:0], COPI};
-                    endcase
-                    bitCompleted <= 1'b1;
-                    bitcount     <= 4'b0;
-                end else begin
-                    bitCompleted <= 1'b0;
-                end
+            if (bitcount == 4'd15) begin 
+                case (({bitShifter[14:0], COPI} >> 8) & 16'h007f) 
+                    16'h0000 : reg_uo_en       <= {bitShifter[6:0], COPI}; 
+                    16'h0001 : reg_uio_en      <= {bitShifter[6:0], COPI};
+                    16'h0002 : reg_pwm_uo_sel  <= {bitShifter[6:0], COPI};
+                    16'h0003 : reg_pwm_uio_sel <= {bitShifter[6:0], COPI};
+                    16'h0004 : reg_pwm_duty    <= {bitShifter[6:0], COPI};
+                    default  : ; // Fixes CASEINCOMPLETE
+                endcase
+                bitCompleted    <= 1'b1;
+                bitsTransferred <= {bitShifter[6:0], COPI}; // Fixes UNDRIVEN
+                bitcount        <= 4'b0;
+            end else begin
+                bitCompleted <= 1'b0;
             end
         end 
-        
-        // 2. IDLE/RESET LOGIC: Clear counters when CS_n is HIGH
-        else begin 
-            bitcount     <= 4'b0;
-            bitCompleted <= 1'b0;
+        // 2. LOWER PRIORITY: The CS_n Idle/Reset
+        // Only reset if we aren't currently seeing a valid clock edge.
+        else if (CS_n) begin 
+            bitcount        <= 4'b0;
+            bitCompleted    <= 1'b0;
+            bitsTransferred <= 8'b0; 
         end
-    end // End of main else
-end // End of always
+    end 
+end
 endmodule
