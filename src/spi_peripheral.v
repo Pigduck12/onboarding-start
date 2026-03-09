@@ -28,7 +28,7 @@ always @(posedge clk or negedge rst_n) begin
         reg_uio_en      <= 8'h00;
         reg_pwm_uo_sel  <= 8'h00;
         reg_pwm_uio_sel <= 8'h00;
-        reg_pwm_duty    <= 8'h00;.
+        reg_pwm_duty    <= 8'h00;
     end else begin
         sclk_prev <= SCLK;
 
