@@ -17,10 +17,9 @@ module spi_peripheral (
   reg[3:0] bitcount;
   reg sclk_prev; // To store the previous state of SCLK
   assign CIPO = bitShifter[15];
-
 always @(posedge clk or negedge rst_n) begin 
     if (!rst_n) begin
-        bitcount        <= 4'b0;
+       bitcount        <= 4'b0;
         bitShifter      <= 16'b0;
         bitCompleted    <= 1'b0;
         sclk_prev       <= 1'b0;
@@ -29,12 +28,11 @@ always @(posedge clk or negedge rst_n) begin
         reg_uio_en      <= 8'h00;
         reg_pwm_uo_sel  <= 8'h00;
         reg_pwm_uio_sel <= 8'h00;
-        reg_pwm_duty    <= 8'h00;
+        reg_pwm_duty    <= 8'h00;.
     end else begin
         sclk_prev <= SCLK;
 
-        // 1. HIGHEST PRIORITY: The Clock Edge
-        // If we see a valid rising edge while CS_n is low, process it immediately.
+        // 1. PROCESS THE DATA (Highest Priority)
         if (!CS_n && SCLK && !sclk_prev) begin 
             bitShifter <= {bitShifter[14:0], COPI};
             bitcount   <= bitcount + 1'b1;
@@ -46,18 +44,19 @@ always @(posedge clk or negedge rst_n) begin
                     16'h0002 : reg_pwm_uo_sel  <= {bitShifter[6:0], COPI};
                     16'h0003 : reg_pwm_uio_sel <= {bitShifter[6:0], COPI};
                     16'h0004 : reg_pwm_duty    <= {bitShifter[6:0], COPI};
-                    default  : ; // Fixes CASEINCOMPLETE
+                    default  : ; 
                 endcase
                 bitCompleted    <= 1'b1;
-                bitsTransferred <= {bitShifter[6:0], COPI}; // Fixes UNDRIVEN
+                bitsTransferred <= {bitShifter[6:0], COPI};
                 bitcount        <= 4'b0;
             end else begin
                 bitCompleted <= 1'b0;
             end
         end 
-        // 2. LOWER PRIORITY: The CS_n Idle/Reset
-        // Only reset if we aren't currently seeing a valid clock edge.
-        else if (CS_n) begin 
+        
+        // 2. ONLY RESET IF NOT PROCESSING AN EDGE
+        // This prevents the 'else' from "stealing" the 16th bit cycle
+        else if (CS_n && !(SCLK && !sclk_prev)) begin 
             bitcount        <= 4'b0;
             bitCompleted    <= 1'b0;
             bitsTransferred <= 8'b0; 
