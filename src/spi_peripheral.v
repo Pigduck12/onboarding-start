@@ -37,12 +37,12 @@ module spi_peripheral (
         bitCompleted <= 1'b0;
         bitcount <= bitcount + 1'b1;
       if (bitcount == 4'd15) begin 
-        case (({bitShifter[14:0], COPI} >> 8) & 7'h7f) 
-            7'h00 : reg_uo_en <= {bitShifter[6:0],COPI}; 
-            7'h01 : reg_uio_en <= {bitShifter[6:0],COPI};
-            7'h02 : reg_pwm_uo_sel <= {bitShifter[6:0],COPI};
-            7'h03 : reg_pwm_uio_sel <= {bitShifter[6:0],COPI};
-            7'h04 : reg_pwm_duty <= {bitShifter[6:0],COPI};
+        case (({bitShifter[14:0], COPI} >> 8) & 16'h007f) 
+            16'h0000 : reg_uo_en <= {bitShifter[6:0],COPI}; 
+            16'h0001 : reg_uio_en <= {bitShifter[6:0],COPI};
+            16'h0002 : reg_pwm_uo_sel <= {bitShifter[6:0],COPI};
+            16'h0003 : reg_pwm_uio_sel <= {bitShifter[6:0],COPI};
+            16'h0004 : reg_pwm_duty <= {bitShifter[6:0],COPI};
             default : ;
         endcase
         bitCompleted <= 1'b1;
