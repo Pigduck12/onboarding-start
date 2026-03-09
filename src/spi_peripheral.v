@@ -1,3 +1,23 @@
+module spi_peripheral (
+  input wire CS_n,
+  input wire COPI,
+  input wire SCLK,
+  input wire clk,
+  input wire rst_n,
+  output wire CIPO,
+  output reg[7:0] bitsTransferred,
+  output reg bitCompleted,
+  output reg [7:0] reg_uo_en,       // Address 0x00
+  output reg [7:0] reg_uio_en,      // Address 0x01
+  output reg [7:0] reg_pwm_uo_sel,  // Address 0x02
+  output reg [7:0] reg_pwm_uio_sel, // Address 0x03
+  output reg [7:0] reg_pwm_duty   // Address 0x04
+);
+  reg[15:0] bitShifter;
+  reg[3:0] bitcount;
+  reg sclk_prev; // To store the previous state of SCLK
+  assign CIPO = bitShifter[15];
+
 always @(posedge clk or negedge rst_n) begin 
     if (!rst_n) begin
         // ... (Reset everything as you have it) ...
@@ -33,3 +53,4 @@ always @(posedge clk or negedge rst_n) begin
         end
     end // End of main else
 end // End of always
+endmodule
