@@ -38,7 +38,7 @@ always @(posedge clk or negedge rst_n) begin
             bitcount   <= bitcount + 1'b1;
 
             if (bitcount == 4'd15) begin 
-                case (({bitShifter[14:0], COPI} >> 8) & 16'h007f) 
+                case (({bitShifter[14:0], COPI} >> 8) & 7'h7F) 
                     16'h0000 : reg_uo_en       <= {bitShifter[6:0], COPI}; 
                     16'h0001 : reg_uio_en      <= {bitShifter[6:0], COPI};
                     16'h0002 : reg_pwm_uo_sel  <= {bitShifter[6:0], COPI};
