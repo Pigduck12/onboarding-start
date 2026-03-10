@@ -17,6 +17,9 @@ module spi_peripheral (
   reg[3:0] bitcount;
   reg sclk_prev; // To store the previous state of SCLK
   assign CIPO = bitShifter[15];
+  wire [15:0] full_packet = {bitShifter[14:0], COPI};
+  wire [7:0]  addr        = full_packet[15:8];
+  wire [7:0]  data        = full_packet[7:0];
 always @(posedge clk or negedge rst_n) begin 
     if (!rst_n) begin
        bitcount        <= 4'b0;
@@ -33,33 +36,29 @@ always @(posedge clk or negedge rst_n) begin
         sclk_prev <= SCLK;
 
         // 1. PROCESS THE DATA (Highest Priority)
-        if (!CS_n && SCLK && !sclk_prev) begin 
-            bitShifter <= {bitShifter[14:0], COPI};
+      if (CS_n)begin
+        bitcount <= 4'b0;
+        bitCompleted <=1'b0;
+        end else begin
+        if (SCLK && !sclk_prev) begin 
+            bitShifter <= full_packet;
             bitcount   <= bitcount + 1'b1;
-
             if (bitcount == 4'd15) begin 
-                case (({bitShifter[14:0], COPI} >> 8) & 7'h7F) 
-                    16'h0000 : reg_uo_en       <= {bitShifter[6:0], COPI}; 
-                    16'h0001 : reg_uio_en      <= {bitShifter[6:0], COPI};
-                    16'h0002 : reg_pwm_uo_sel  <= {bitShifter[6:0], COPI};
-                    16'h0003 : reg_pwm_uio_sel <= {bitShifter[6:0], COPI};
-                    16'h0004 : reg_pwm_duty    <= {bitShifter[6:0], COPI};
+              case (addr) 
+                    8'h00 : reg_uo_en       <= data; 
+                    8'h01 : reg_uio_en      <= data;
+                    8'h02 : reg_pwm_uo_sel  <= data;
+                    8'h03 : reg_pwm_uio_sel <= data;
+                    8'h04 : reg_pwm_duty    <= data;
                     default  : ; 
                 endcase
                 bitCompleted    <= 1'b1;
-                bitsTransferred <= {bitShifter[6:0], COPI};
-                bitcount        <= 4'b0;
+                bitsTransferred <= data;
             end else begin
                 bitCompleted <= 1'b0;
             end
-        end 
-        
-        // 2. ONLY RESET IF NOT PROCESSING AN EDGE
-        // This prevents the 'else' from "stealing" the 16th bit cycle
-        else if (CS_n && !(SCLK && !sclk_prev)) begin 
-            bitcount        <= 4'b0;
-            bitCompleted    <= 1'b0;
-            bitsTransferred <= 8'b0; 
+          end else begin
+            bitCompleted <= 1'b0;
         end
     end 
 end
