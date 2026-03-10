@@ -17,9 +17,7 @@ module spi_peripheral (
   reg[3:0] bitcount;
   reg sclk_prev; // To store the previous state of SCLK
   assign CIPO = bitShifter[15];
-  wire [15:0] full_packet = {bitShifter[14:0], COPI};
-  wire [7:0]  addr        = full_packet[15:8];
-  wire [7:0]  data        = full_packet[7:0];
+  wire [7:0] current_addr = bitShifter[14:7];
 always @(posedge clk or negedge rst_n) begin 
     if (!rst_n) begin
        bitcount        <= 4'b0;
@@ -41,19 +39,19 @@ always @(posedge clk or negedge rst_n) begin
         bitCompleted <=1'b0;
         end else begin
         if (SCLK && !sclk_prev) begin 
-            bitShifter <= full_packet;
+          bitShifter <= {bitShifter[14:0],COPI};
             bitcount   <= bitcount + 1'b1;
             if (bitcount == 4'd15) begin 
-              case (addr) 
-                    8'h00 : reg_uo_en       <= data; 
-                    8'h01 : reg_uio_en      <= data;
-                    8'h02 : reg_pwm_uo_sel  <= data;
-                    8'h03 : reg_pwm_uio_sel <= data;
-                    8'h04 : reg_pwm_duty    <= data;
+              case (current_addr) 
+                    8'h00 : reg_uo_en       <= {bitShifter[6:0], COPI}; 
+                    8'h01 : reg_uio_en      <= {bitShifter[6:0], COPI};
+                    8'h02 : reg_pwm_uo_sel  <= {bitShifter[6:0], COPI};
+                    8'h03 : reg_pwm_uio_sel <= {bitShifter[6:0], COPI};
+                    8'h04 : reg_pwm_duty    <= {bitShifter[6:0], COPI};
                     default  : ; 
                 endcase
                 bitCompleted    <= 1'b1;
-                bitsTransferred <= data;
+                bitsTransferred <= {bitShifter[6:0], COPI};
             end else begin
                 bitCompleted <= 1'b0;
             end
@@ -61,6 +59,6 @@ always @(posedge clk or negedge rst_n) begin
             bitCompleted <= 1'b0;
         end
     end 
-end
+  end
 end
 endmodule
