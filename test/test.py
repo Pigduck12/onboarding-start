@@ -5,6 +5,16 @@ from cocotb.triggers import ClockCycles
 from cocotb.types import Logic
 from cocotb.types import LogicArray
 
+
+async def measure_pwm(dut, signal):
+    """Helper to measure duty cycle and period of a signal."""
+    await RisingEdge(signal)
+    t1 = cocotb.utils.get_sim_time(units="ns")
+    await FallingEdge(signal)
+    t2 = cocotb.utils.get_sim_time(units="ns")
+    await RisingEdge(signal)
+    t3 = cocotb.utils.get_sim_time(units="ns")
+    
 async def await_half_sclk(dut):
     """Wait for the SCLK signal to go high or low."""
     start_time = cocotb.utils.get_sim_time(units="ns")
