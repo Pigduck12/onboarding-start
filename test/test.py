@@ -200,19 +200,21 @@ async def test_pwm_duty(dut):
     # Example: PWM controlled by ui_in bits [7:0]
     test_values = [64, 128, 192] # Roughly 25%, 50%, 75% duty
     
-    for val in test_values:
-        dut.ui_in.value = val
-        dut._log.info(f"Setting PWM input to {val}")
+   for val in test_values:
+        await send_spi_transaction(dut, 1, 0x04, val) 
+        dut._log.info(f"Setting PWM duty cycle to {val}")
         
-        # Wait for the PWM generator to stabilize
-        await ClockCycles(dut.clk, 500)
+        # Wait for the PWM phase to complete at least once
+        await ClockCycles(dut.clk, 4000) 
         
-        # Measure the output on uo_out[0]
+        # Measure the output
         duty, period = await measure_pwm(dut, dut.uo_out[0])
-        
+
+        # ADD THIS LINE: Calculate the expected percentage
         expected_duty = (val / 256) * 100
+        
         dut._log.info(f"Measured Duty: {duty:.2f}%, Period: {period}ns")
         
-        # Assert with a small margin of error for simulation rounding
+        # Assert with a small margin of error
         assert abs(duty - expected_duty) < 2.0, f"Duty cycle mismatch! Exp: {expected_duty}, Got: {duty}"
     dut._log.info("PWM Duty Cycle test completed successfully")
