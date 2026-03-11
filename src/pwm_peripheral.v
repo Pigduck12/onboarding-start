@@ -24,20 +24,18 @@ module pwm_peripheral (
     wire pwm_signal = (safe_duty_cycle == 8'hFF) ? 1'b1 : (pwm_counter < safe_duty_cycle); // 253 is 98.82% 254 is 99.21%, 255 is 100%, not 99.61%
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            out             <= 16'b0;     // Clear outputs on reset [cite: 23]
-            pwm_counter     <= 8'h00;     // Reset PWM phase [cite: 24]
-            clk_counter     <= 11'h000;   // Reset prescaler [cite: 24]
-            safe_duty_cycle <= 8'h00;     // Default to 0% duty [cite: 24]
+            out             <= 16'b0;     // Clear outputs on reset 
+            pwm_counter     <= 8'h00;     // Reset PWM phase
+            clk_counter     <= 11'h000;   // Reset prescaler 
+            safe_duty_cycle <= 8'h00;     // Default to 0% duty 
         end else begin
-            // 1. Update Duty Cycle safely when SPI transaction ends [cite: 26, 45]
             if (spi_data_updated) begin
                 safe_duty_cycle <= pwm_duty_cycle; 
             end
 
-            // 2. Advance PWM Counters [cite: 27, 28]
             if (clk_counter == clk_div_trig) begin
-                clk_counter <= 0;         // Reset prescaler 
-                pwm_counter <= pwm_counter + 1; // Increment PWM phase [cite: 28]
+                clk_counter <= 0;        
+                pwm_counter <= pwm_counter + 1; 
             end else begin
                 clk_counter <= clk_counter + 1; 
             end
@@ -67,6 +65,7 @@ module pwm_peripheral (
     end
 
 endmodule
+
 
 
 
