@@ -200,7 +200,7 @@ async def test_pwm_duty(dut):
     # Example: PWM controlled by ui_in bits [7:0]
     test_values = [64, 128, 192] # Roughly 25%, 50%, 75% duty
     
-   for val in test_values:
+    for val in test_values:
         await send_spi_transaction(dut, 1, 0x04, val) 
         dut._log.info(f"Setting PWM duty cycle to {val}")
         
