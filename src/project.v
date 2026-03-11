@@ -56,8 +56,8 @@ pwm_peripheral pwm_peripheral_inst (
   
   // Example: ou_out is the sum of ui_in and uio_in
   assign uio_oe  = 8'hFF;  
-  assign uo_out = (pwm_raw_outputs[7:0] & en_reg_pwm_7_0) | en_reg_out_7_0; 
-  assign uio_out = {cipo_signal,((pwm_raw_outputs[14:8] & en_reg_pwm_15_8[6:0]) | en_reg_out_15_8[6:0])};
+  assign uo_out = pwm_raw_outputs[7:0]; 
+  assign uio_out = {cipo_signal,pwm_raw_outputs[14:8]};
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, ui_in[7:3], uio_in,pwm_raw_outputs[15],spi_data};
     
