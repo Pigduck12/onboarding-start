@@ -15,8 +15,7 @@ module tt_um_uwasic_onboarding_eliot_tong (
     input  wire       ena,      // always 1 when the design is powered, so you can ignore it
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
-);
-    wire [7:0] spi_data;  // Holds data from SPI to pass to PWM
+);  
     wire spi_ready;       // Signal from SPI to PWM that data is updated
     wire [7:0] en_reg_out_7_0;
     wire [7:0] en_reg_out_15_8;
@@ -58,6 +57,6 @@ pwm_peripheral pwm_peripheral_inst (
   assign uo_out = pwm_raw_outputs[7:0]; 
   assign uio_out = pwm_raw_outputs[15:8]
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, ui_in[7:3], uio_in,pwm_raw_outputs[15],spi_data};
+    wire _unused = &{ena, ui_in[7:3], uio_in,pwm_raw_outputs[15]};
     
 endmodule
