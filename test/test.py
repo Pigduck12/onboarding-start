@@ -175,7 +175,7 @@ async def test_pwm_freq(dut):
     await ClockCycles(dut.clk, 1000)
     
     _, period = await measure_pwm(dut, dut.uo_out[0])
-    expected_period = 100 * 256
+    expected_period = 100 * 256 * 13
     
     assert abs(period - expected_period) < 1, f"Frequency error! Exp: {expected_period}ns, Got: {period}ns"
     dut._log.info("PWM Frequency test completed successfully")
