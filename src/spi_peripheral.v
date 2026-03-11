@@ -52,5 +52,8 @@ always @(posedge clk or negedge rst_n) begin
                 bitCompleted <= 1'b0;
       end 
     end 
+  else begin 
+    bitCompleted <= 1'b0;
+  end
   end
 endmodule
