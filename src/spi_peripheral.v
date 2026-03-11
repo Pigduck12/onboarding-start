@@ -34,11 +34,10 @@ always @(posedge clk or negedge rst_n) begin
       if (CS_n)begin
         bitcount <= 4'b0;
         bitCompleted <=1'b0;
-        end else begin
-        if (SCLK && !sclk_prev) begin 
+        end else if (SCLK && !sclk_prev) begin 
           bitShifter <= {bitShifter[14:0],COPI};
             bitcount   <= bitcount + 1'b1;
-            if (bitcount == 4'd15) begin 
+          if (bitcount == 4'd15) begin 
               case (bitShifter[14:7]) 
                     8'h00 : reg_uo_en       <= {bitShifter[6:0], COPI}; 
                     8'h01 : reg_uio_en      <= {bitShifter[6:0], COPI};
@@ -48,13 +47,10 @@ always @(posedge clk or negedge rst_n) begin
                     default  : ; 
                 endcase
                 bitCompleted    <= 1'b1;
+              end
             end else begin
                 bitCompleted <= 1'b0;
-            end
-          end else begin
-            bitCompleted <= 1'b0;
-        end
+      end 
     end 
   end
-end
 endmodule
