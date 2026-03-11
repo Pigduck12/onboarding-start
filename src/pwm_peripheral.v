@@ -16,7 +16,6 @@ module pwm_peripheral (
     input wire spi_data_updated,
     output reg [15:0] out
 );
-
     localparam clk_div_trig = 12; // Divide by (12+1)*256, yielding 3000 (3004.80769) Hz
     reg [10:0] clk_counter;
     reg [7:0] pwm_counter;
@@ -32,7 +31,7 @@ module pwm_peripheral (
         end else begin
             // 1. Update Duty Cycle safely when SPI transaction ends [cite: 26, 45]
             if (spi_data_updated) begin
-                safe_duty_cycle <= pwm_duty_cycle; [cite: 26]
+                safe_duty_cycle <= pwm_duty_cycle; 
             end
 
             // 2. Advance PWM Counters [cite: 27, 28]
@@ -40,7 +39,7 @@ module pwm_peripheral (
                 clk_counter <= 0;         // Reset prescaler 
                 pwm_counter <= pwm_counter + 1; // Increment PWM phase [cite: 28]
             end else begin
-                clk_counter <= clk_counter + 1; [cite: 27]
+                clk_counter <= clk_counter + 1; 
             end
             out[7:0] <= en_reg_out_7_0;
             out[15:8] <= en_reg_out_15_8;
@@ -68,6 +67,7 @@ module pwm_peripheral (
     end
 
 endmodule
+
 
 
 
