@@ -22,22 +22,8 @@ module pwm_peripheral (
     reg        sync_0, sync_1, sync_2;
     reg [7:0]  safe_duty_cycle;
     reg [15:0] out_reg;
-    assign out[0]  = out_reg[0];
-    assign out[1]  = out_reg[1];
-    assign out[2]  = out_reg[2];
-    assign out[3]  = out_reg[3];
-    assign out[4]  = out_reg[4];
-    assign out[5]  = out_reg[5];
-    assign out[6]  = out_reg[6];
-    assign out[7]  = out_reg[7];
-    assign out[8]  = out_reg[8];
-    assign out[9]  = out_reg[9];
-    assign out[10] = out_reg[10];
-    assign out[11] = out_reg[11];
-    assign out[12] = out_reg[12];
-    assign out[13] = out_reg[13];
-    assign out[14] = out_reg[14];
-    assign out[15] = out_reg[15];
+    reg [15:0] next_out;
+    assign out = out_reg;
     wire pwm_signal = (safe_duty_cycle == 8'hFF) ? 1'b1 : (pwm_counter < safe_duty_cycle); // 253 is 98.82% 254 is 99.21%, 255 is 100%, not 99.61%
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -56,32 +42,34 @@ module pwm_peripheral (
             end else begin
                 clk_counter <= clk_counter + 1; 
             end
-            out_reg[7:0] <= en_reg_out_7_0;
-            out_reg[15:8] <= en_reg_out_15_8;
+            next_out = {en_reg_out_15_8, en_reg_out_7_0};
+            
             // Apply PWM to each bit individually if enabled
             // Lower 8 bits
-            if (en_reg_pwm_7_0[0]) out_reg[0] <= (pwm_signal) ? en_reg_out_7_0[0] : 1'b0;
-            if (en_reg_pwm_7_0[1]) out_reg[1] <= (pwm_signal) ? en_reg_out_7_0[1] : 1'b0;
-            if (en_reg_pwm_7_0[2]) out_reg[2] <= (pwm_signal) ? en_reg_out_7_0[2] : 1'b0;
-            if (en_reg_pwm_7_0[3]) out_reg[3] <= (pwm_signal) ? en_reg_out_7_0[3] : 1'b0;
-            if (en_reg_pwm_7_0[4]) out_reg[4] <= (pwm_signal) ? en_reg_out_7_0[4] : 1'b0;
-            if (en_reg_pwm_7_0[5]) out_reg[5] <= (pwm_signal) ? en_reg_out_7_0[5] : 1'b0;
-            if (en_reg_pwm_7_0[6]) out_reg[6] <= (pwm_signal) ? en_reg_out_7_0[6] : 1'b0;
-            if (en_reg_pwm_7_0[7]) out_reg[7] <= (pwm_signal) ? en_reg_out_7_0[7] : 1'b0;
+            if (en_reg_pwm_7_0[0]) next_out[0] = (pwm_signal) ? en_reg_out_7_0[0] : 1'b0;
+            if (en_reg_pwm_7_0[1]) next_out[1] = (pwm_signal) ? en_reg_out_7_0[1] : 1'b0;
+            if (en_reg_pwm_7_0[2]) next_out[2] = (pwm_signal) ? en_reg_out_7_0[2] : 1'b0;
+            if (en_reg_pwm_7_0[3]) next_out[3] = (pwm_signal) ? en_reg_out_7_0[3] : 1'b0;
+            if (en_reg_pwm_7_0[4]) next_out[4] = (pwm_signal) ? en_reg_out_7_0[4] : 1'b0;
+            if (en_reg_pwm_7_0[5]) next_out[5] = (pwm_signal) ? en_reg_out_7_0[5] : 1'b0;
+            if (en_reg_pwm_7_0[6]) next_out[6] = (pwm_signal) ? en_reg_out_7_0[6] : 1'b0;
+            if (en_reg_pwm_7_0[7]) next_out[7] = (pwm_signal) ? en_reg_out_7_0[7] : 1'b0;
 
             // Upper 8 bits
-            if (en_reg_pwm_15_8[0]) out_reg[8] <= (pwm_signal) ? en_reg_out_15_8[0] : 1'b0;
-            if (en_reg_pwm_15_8[1]) out_reg[9] <= (pwm_signal) ? en_reg_out_15_8[1] : 1'b0;
-            if (en_reg_pwm_15_8[2]) out_reg[10] <= (pwm_signal) ? en_reg_out_15_8[2] : 1'b0;
-            if (en_reg_pwm_15_8[3]) out_reg[11] <= (pwm_signal) ? en_reg_out_15_8[3] : 1'b0;
-            if (en_reg_pwm_15_8[4]) out_reg[12] <= (pwm_signal) ? en_reg_out_15_8[4] : 1'b0;
-            if (en_reg_pwm_15_8[5]) out_reg[13] <= (pwm_signal) ? en_reg_out_15_8[5] : 1'b0;
-            if (en_reg_pwm_15_8[6]) out_reg[14] <= (pwm_signal) ? en_reg_out_15_8[6] : 1'b0;
-            if (en_reg_pwm_15_8[7]) out_reg[15] <= (pwm_signal) ? en_reg_out_15_8[7] : 1'b0;
+            if (en_reg_pwm_15_8[0]) next_out[8] = (pwm_signal) ? en_reg_out_15_8[0] : 1'b0;
+            if (en_reg_pwm_15_8[1]) next_out[9] = (pwm_signal) ? en_reg_out_15_8[1] : 1'b0;
+            if (en_reg_pwm_15_8[2]) next_out[10] = (pwm_signal) ? en_reg_out_15_8[2] : 1'b0;
+            if (en_reg_pwm_15_8[3]) next_out[11] = (pwm_signal) ? en_reg_out_15_8[3] : 1'b0;
+            if (en_reg_pwm_15_8[4]) next_out[12] = (pwm_signal) ? en_reg_out_15_8[4] : 1'b0;
+            if (en_reg_pwm_15_8[5]) next_out[13] = (pwm_signal) ? en_reg_out_15_8[5] : 1'b0;
+            if (en_reg_pwm_15_8[6]) next_out[14] = (pwm_signal) ? en_reg_out_15_8[6] : 1'b0;
+            if (en_reg_pwm_15_8[7]) next_out[15] = (pwm_signal) ? en_reg_out_15_8[7] : 1'b0;
+            out_reg <= next_out;
         end
     end
 
 endmodule
+
 
 
 
