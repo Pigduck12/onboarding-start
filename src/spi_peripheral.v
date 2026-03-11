@@ -39,9 +39,7 @@ always @(posedge clk or negedge rst_n) begin
                 bitcount   <= bitcount + 1'b1;
 
                 if (bitcount == 4'd15) begin 
-                    // At the 16th bit, bitShifter[14:7] contains the first 8 bits (Address)
-                    // We use {bitShifter[6:0], COPI} to get the full 8 bits of Data
-                    case (bitShifter[14:7]) 
+                  case (bitShifter[14:7] & 8'h7F) 
                         8'h00 : reg_uo_en       <= {bitShifter[6:0], COPI};
                         8'h01 : reg_uio_en      <= {bitShifter[6:0], COPI};
                         8'h02 : reg_pwm_uo_sel  <= {bitShifter[6:0], COPI};
