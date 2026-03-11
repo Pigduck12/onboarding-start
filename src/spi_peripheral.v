@@ -5,7 +5,6 @@ module spi_peripheral (
   input wire clk,
   input wire rst_n,
   output wire CIPO,
-  output reg[7:0] bitsTransferred,
   output reg bitCompleted,
   output reg [7:0] reg_uo_en,       // Address 0x00
   output reg [7:0] reg_uio_en,      // Address 0x01
@@ -50,7 +49,6 @@ always @(posedge clk or negedge rst_n) begin
                     default  : ; 
                 endcase
                 bitCompleted    <= 1'b1;
-                bitsTransferred <= {bitShifter[6:0], COPI};
             end else begin
                 bitCompleted <= 1'b0;
             end
