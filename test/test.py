@@ -14,6 +14,7 @@ async def measure_pwm(dut, signal):
     t2 = cocotb.utils.get_sim_time(units="ns")
     await RisingEdge(signal)
     t3 = cocotb.utils.get_sim_time(units="ns")
+    
     period = t3 - t1
     high_time = t2 - t1
     duty_cycle = (high_time / period) * 100
@@ -169,10 +170,10 @@ async def test_pwm_freq(dut):
     clock = Clock(dut.clk, 100, units="ns")
     cocotb.start_soon(clock.start())
     
-    dut.rst_n.value = 1
-    dut.ui_in.value = 128 # 50% duty
-    
-    await ClockCycles(dut.clk, 1000)
+    await send_spi_transaction(dut, 1, 0x00, 0x01) # Set bit 0 high
+    await send_spi_transaction(dut, 1, 0x02, 0x01) # Enable PWM on bit 0
+    await send_spi_transaction(dut, 1, 0x04, 128)  # Set 50% duty cycle
+    await ClockCycles(dut.clk, 2000)
     
     _, period = await measure_pwm(dut, dut.uo_out[0])
     expected_period = 100 * 256 * 13
