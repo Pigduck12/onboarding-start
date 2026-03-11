@@ -14,6 +14,7 @@ async def measure_pwm(dut, signal):
     t2 = cocotb.utils.get_sim_time(units="ns")
     await RisingEdge(signal)
     t3 = cocotb.utils.get_sim_time(units="ns")
+    return duty_cycle, period
     
 async def await_half_sclk(dut):
     """Wait for the SCLK signal to go high or low."""
