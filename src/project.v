@@ -49,7 +49,6 @@ pwm_peripheral pwm_peripheral_inst (
     .reg_pwm_uo_sel(en_reg_pwm_7_0),  // Address 0x02
     .reg_pwm_uio_sel(en_reg_pwm_15_8),// Address 0x03
     .reg_pwm_duty(pwm_duty_cycle),     // Address 0x04
-    .bitsTransferred(spi_data), // Bridge to PWM
     .bitCompleted(spi_ready)
   ); //create what needs to go into spiperipheral
   // All output pins must be assigned. If not used, assign to 0.
