@@ -22,7 +22,6 @@ always @(posedge clk or negedge rst_n) begin
         bitShifter      <= 16'b0;
         bitCompleted    <= 1'b0;
         sclk_prev       <= 1'b0;
-        bitsTransferred <= 8'b0; 
         reg_uo_en       <= 8'h00;
         reg_uio_en      <= 8'h00;
         reg_pwm_uo_sel  <= 8'h00;
