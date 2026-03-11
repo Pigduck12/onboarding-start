@@ -14,7 +14,7 @@ module pwm_peripheral (
     input  wire [7:0] en_reg_pwm_15_8,
     input  wire [7:0] pwm_duty_cycle,
     input wire spi_data_updated,
-    output reg [15:0] out
+    output wire [15:0] out
 );
     localparam clk_div_trig = 12; // Divide by (12+1)*256, yielding 3000 (3004.80769) Hz
     reg [10:0] clk_counter;
@@ -26,7 +26,7 @@ module pwm_peripheral (
     wire pwm_signal = (safe_duty_cycle == 8'hFF) ? 1'b1 : (pwm_counter < safe_duty_cycle); // 253 is 98.82% 254 is 99.21%, 255 is 100%, not 99.61%
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            out             <= 16'b0;     // Clear outputs on reset 
+            out_reg         <= 16'b0;
             pwm_counter     <= 8'h00;     // Reset PWM phase
             clk_counter     <= 11'h000;   // Reset prescaler 
             safe_duty_cycle <= 8'h00;     // Default to 0% duty 
@@ -67,6 +67,7 @@ module pwm_peripheral (
     end
 
 endmodule
+
 
 
 
