@@ -17,43 +17,47 @@ module spi_peripheral (
   reg sclk_prev; // To store the previous state of SCLK
   assign CIPO = bitShifter[15];
 always @(posedge clk or negedge rst_n) begin 
-    if (!rst_n) begin
-       bitcount        <= 4'b0;
-        bitShifter      <= 16'b0;
-        bitCompleted    <= 1'b0;
-        sclk_prev       <= 1'b0;
-        reg_uo_en       <= 8'h00;
-        reg_uio_en      <= 8'h00;
-        reg_pwm_uo_sel  <= 8'h00;
-        reg_pwm_uio_sel <= 8'h00;
-        reg_pwm_duty    <= 8'h00;
-    end else begin
-        sclk_prev <= SCLK;
+        if (!rst_n) begin
+            bitcount        <= 4'b0;
+            bitShifter      <= 16'b0;
+            bitCompleted    <= 1'b0;
+            sclk_prev       <= 1'b0;
+            reg_uo_en       <= 8'h00;
+            reg_uio_en      <= 8'h00;
+            reg_pwm_uo_sel  <= 8'h00;
+            reg_pwm_uio_sel <= 8'h00;
+            reg_pwm_duty    <= 8'h00;
+        end else begin
+            sclk_prev <= SCLK;
 
-        // 1. PROCESS THE DATA (Highest Priority)
-      if (CS_n)begin
-        bitcount <= 4'b0;
-        bitCompleted <=1'b0;
-        end else if (SCLK && !sclk_prev) begin 
-          bitShifter <= {bitShifter[14:0],COPI};
-            bitcount   <= bitcount + 1'b1;
-          if (bitcount == 4'd15) begin 
-              case (bitShifter[14:7]) 
-                    8'h00 : reg_uo_en       <= {bitShifter[6:0], COPI}; 
-                    8'h01 : reg_uio_en      <= {bitShifter[6:0], COPI};
-                    8'h02 : reg_pwm_uo_sel  <= {bitShifter[6:0], COPI};
-                    8'h03 : reg_pwm_uio_sel <= {bitShifter[6:0], COPI};
-                    8'h04 : reg_pwm_duty    <= {bitShifter[6:0], COPI};
-                    default  : ; 
-                endcase
-                bitCompleted    <= 1'b1;
-              end
-            end else begin
+            if (CS_n) begin
+                bitcount <= 4'b0;
                 bitCompleted <= 1'b0;
-      end 
+            end else if (SCLK && !sclk_prev) begin 
+                // Shift in the new bit from the COPI line
+                bitShifter <= {bitShifter[14:0], COPI};
+                bitcount   <= bitcount + 1'b1;
+
+                if (bitcount == 4'd15) begin 
+                    // At the 16th bit, bitShifter[14:7] contains the first 8 bits (Address)
+                    // We use {bitShifter[6:0], COPI} to get the full 8 bits of Data
+                    case (bitShifter[14:7]) 
+                        8'h00 : reg_uo_en       <= {bitShifter[6:0], COPI};
+                        8'h01 : reg_uio_en      <= {bitShifter[6:0], COPI};
+                        8'h02 : reg_pwm_uo_sel  <= {bitShifter[6:0], COPI};
+                        8'h03 : reg_pwm_uio_sel <= {bitShifter[6:0], COPI};
+                        8'h04 : reg_pwm_duty    <= {bitShifter[6:0], COPI};
+                        default : ;
+                    endcase
+                    bitCompleted <= 1'b1; // Start the update pulse
+                end else begin
+                    bitCompleted <= 1'b0;
+                end
+            end else begin
+                // IMPORTANT: This final else ensures bitCompleted is only 1 cycle long.
+                // This allows the pwm_peripheral's edge detector to work correctly.
+                bitCompleted <= 1'b0; 
+            end
+        end 
     end 
-  else begin 
-    bitCompleted <= 1'b0;
-  end
-  end
 endmodule
