@@ -148,11 +148,71 @@ async def test_spi(dut):
 
 @cocotb.test()
 async def test_pwm_freq(dut):
-    # Write your test here
+    cocotb.start_soon(Clock(dut.clk, 100, units="ns").start())
+
+    dut.rst_n.value = 0
+    await Timer(200, units="ns")
+    dut.rst_n.value = 1
+
+    # 3. Configure: Enable PWM on bit 0, 50% duty cycle
+    dut.en_reg_out_7_0.value = 0xFF
+    dut.en_reg_pwm_7_0.value = 0x01
+    dut.pwm_duty_cycle.value = 128
+    
+    # 4. Pulse the update signal to capture duty cycle [cite: 9]
+    dut.spi_data_updated.value = 1
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    dut.spi_data_updated.value = 0
+
+    # 5. Measure period between two rising edges of out[0]
+    await RisingEdge(dut.out[0])
+    start_time = cocotb.utils.get_sim_time(units='ns')
+    await RisingEdge(dut.out[0])
+    end_time = cocotb.utils.get_sim_time(units='ns')
+
+    period = end_time - start_time
+    freq = 1 / (period * 1e-9)
+    
+    dut._log.info(f"Measured Period: {period} ns ({freq:.2f} Hz)")
+    # Expecting ~332,800 ns (13 div * 256 steps * 100ns) 
+    assert 3000 <= freq <= 3010, f"Frequency {freq} Hz out of range!"
     dut._log.info("PWM Frequency test completed successfully")
 
 
 @cocotb.test()
 async def test_pwm_duty(dut):
-    # Write your test here
+    cocotb.start_soon(Clock(dut.clk, 100, units="ns").start())
+    dut.rst_n.value = 1
+    
+    # Test 100% Duty Cycle (Value 255) 
+    dut.pwm_duty_cycle.value = 255
+    dut.spi_data_updated.value = 1
+    await Timer(500, units="ns")
+    dut.spi_data_updated.value = 0
+    
+    # Wait for synchronization and check if output stays high
+    await Timer(10, units="us") 
+    assert dut.out[0].value == 1, "Duty cycle 255 should be 100% high"
+
+    # Test ~50% Duty Cycle (Value 128)
+    dut.pwm_duty_cycle.value = 128
+    dut.spi_data_updated.value = 1
+    await Timer(500, units="ns")
+    dut.spi_data_updated.value = 0
+
+    # Measure high time vs low time
+    await RisingEdge(dut.out[0])
+    t_high_start = cocotb.utils.get_sim_time(units='ns')
+    await FallEdge(dut.out[0])
+    t_low_start = cocotb.utils.get_sim_time(units='ns')
+    await RisingEdge(dut.out[0])
+    t_end = cocotb.utils.get_sim_time(units='ns')
+
+    high_duration = t_low_start - t_high_start
+    total_duration = t_end - t_high_start
+    measured_duty = (high_duration / total_duration) * 100
+
+    dut._log.info(f"Measured Duty Cycle: {measured_duty:.2f}%")
+    assert 49.5 <= measured_duty <= 50.5, "Duty cycle not 50%"
     dut._log.info("PWM Duty Cycle test completed successfully")
