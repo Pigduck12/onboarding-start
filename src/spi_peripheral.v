@@ -33,9 +33,9 @@ always @(posedge clk or negedge rst_n) begin
             if (CS_n) begin
                 bitcount <= 4'b0;
                 bitCompleted <= 1'b0;
-            end else if (SCLK && !sclk_prev) begin 
+            end else if (SCLK && !sclk_prev) begin //activate if serial clock is on 
                 // Shift in the new bit from the COPI line
-                bitShifter <= {bitShifter[14:0], COPI};
+              bitShifter <= {bitShifter[14:0], COPI}; //shift in the new bit
                 bitcount   <= bitcount + 1'b1;
 
                 if (bitcount == 4'd15) begin 
