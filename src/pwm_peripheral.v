@@ -22,7 +22,22 @@ module pwm_peripheral (
     reg        sync_0, sync_1, sync_2;
     reg [7:0]  safe_duty_cycle;
     reg [15:0] out_reg;
-    assign out = out_reg;
+    assign out[0]  = out_reg[0];
+    assign out[1]  = out_reg[1];
+    assign out[2]  = out_reg[2];
+    assign out[3]  = out_reg[3];
+    assign out[4]  = out_reg[4];
+    assign out[5]  = out_reg[5];
+    assign out[6]  = out_reg[6];
+    assign out[7]  = out_reg[7];
+    assign out[8]  = out_reg[8];
+    assign out[9]  = out_reg[9];
+    assign out[10] = out_reg[10];
+    assign out[11] = out_reg[11];
+    assign out[12] = out_reg[12];
+    assign out[13] = out_reg[13];
+    assign out[14] = out_reg[14];
+    assign out[15] = out_reg[15];
     wire pwm_signal = (safe_duty_cycle == 8'hFF) ? 1'b1 : (pwm_counter < safe_duty_cycle); // 253 is 98.82% 254 is 99.21%, 255 is 100%, not 99.61%
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -67,6 +82,7 @@ module pwm_peripheral (
     end
 
 endmodule
+
 
 
 
