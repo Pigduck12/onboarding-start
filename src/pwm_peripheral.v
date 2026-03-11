@@ -30,7 +30,7 @@ module pwm_peripheral (
             out_reg         <= 16'b0;
             pwm_counter     <= 8'h00;     // Reset PWM phase
             clk_counter     <= 11'h000;   // Reset prescaler 
-            safe_duty_cycle <= 8'h00;     // Default to 0% duty 
+            safe_duty_cycle <= 8'h80;     // Default to 0% duty 
         end else begin
             if (spi_data_updated) begin
                 safe_duty_cycle <= pwm_duty_cycle; 
@@ -69,6 +69,7 @@ module pwm_peripheral (
     end
 
 endmodule
+
 
 
 
