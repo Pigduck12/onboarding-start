@@ -42,7 +42,7 @@ always @(posedge clk or negedge rst_n) begin
           bitShifter <= {bitShifter[14:0],COPI};
             bitcount   <= bitcount + 1'b1;
             if (bitcount == 4'd15) begin 
-              case (current_addr) 
+              case (current_addr[14:7]) 
                     8'h00 : reg_uo_en       <= {bitShifter[6:0], COPI}; 
                     8'h01 : reg_uio_en      <= {bitShifter[6:0], COPI};
                     8'h02 : reg_pwm_uo_sel  <= {bitShifter[6:0], COPI};
