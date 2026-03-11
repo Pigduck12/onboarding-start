@@ -24,26 +24,48 @@ module pwm_peripheral (
     reg [7:0]  safe_duty_cycle;
     wire pwm_signal = (safe_duty_cycle == 8'hFF) ? 1'b1 : (pwm_counter < safe_duty_cycle); // 253 is 98.82% 254 is 99.21%, 255 is 100%, not 99.61%
 
+    `default_nettype none
+
+module pwm_peripheral (
+    input  wire        clk,               // System clock [cite: 18]
+    input  wire        rst_n,             // Active-low reset [cite: 18]
+    input  wire [7:0]  en_reg_out_7_0,    // Static output values (0x00) [cite: 18]
+    input  wire [7:0]  en_reg_out_15_8,   // Static output values (0x01) [cite: 18]
+    input  wire [7:0]  en_reg_pwm_7_0,    // PWM Enable for uo_out (0x02) [cite: 18]
+    input  wire [7:0]  en_reg_pwm_15_8,   // PWM Enable for uio_out (0x03) [cite: 18]
+    input  wire [7:0]  pwm_duty_cycle,    // Duty cycle from SPI (0x04) [cite: 18]
+    input  wire        spi_data_updated,  // Pulse when SPI finishes [cite: 19]
+    output reg  [15:0] out                // Final driven outputs [cite: 19]
+);
+
+    // Timing Configuration
+    localparam clk_div_trig = 12;         // Frequency divider [cite: 20]
+    reg [10:0] clk_counter;               // Prescaler counter [cite: 20]
+    reg [7:0]  pwm_counter;               // Current position in PWM period [cite: 20]
+    reg [7:0]  safe_duty_cycle;           // Shadow register for duty cycle [cite: 21]
+
+    // PWM Signal Generation
+    // High if counter < duty; 100% high if duty is 0xFF [cite: 22, 23]
+    wire pwm_signal = (safe_duty_cycle == 8'hFF) ? 1'b1 : (pwm_counter < safe_duty_cycle);
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            out <= 0;
-            pwm_counter <= 0;
-            clk_counter <= 0;
-            sync_0 <= 0;
-            sync_1 <= 0;
-            sync_2 <= 0;
-            safe_duty_cycle <= 0;
+            out             <= 16'b0;     // Clear outputs on reset [cite: 23]
+            pwm_counter     <= 8'h00;     // Reset PWM phase [cite: 24]
+            clk_counter     <= 11'h000;   // Reset prescaler [cite: 24]
+            safe_duty_cycle <= 8'h00;     // Default to 0% duty [cite: 24]
         end else begin
-            sync_0 <= spi_data_updated;
-            sync_1 <= sync_0;            
-            sync_2 <= sync_1;     
-            if (sync_1 && !sync_2) begin //what??
-                safe_duty_cycle <= pwm_duty_cycle; // Capture the data safely
+            // 1. Update Duty Cycle safely when SPI transaction ends [cite: 26, 45]
+            if (spi_data_updated) begin
+                safe_duty_cycle <= pwm_duty_cycle; [cite: 26]
             end
-            clk_counter <= clk_counter + 1;
+
+            // 2. Advance PWM Counters [cite: 27, 28]
             if (clk_counter == clk_div_trig) begin
-                pwm_counter <= pwm_counter + 1;
-                clk_counter <= 0;
+                clk_counter <= 0;         // Reset prescaler 
+                pwm_counter <= pwm_counter + 1; // Increment PWM phase [cite: 28]
+            end else begin
+                clk_counter <= clk_counter + 1; [cite: 27]
             end
             out[7:0] <= en_reg_out_7_0;
             out[15:8] <= en_reg_out_15_8;
@@ -71,6 +93,7 @@ module pwm_peripheral (
     end
 
 endmodule
+
 
 
 
