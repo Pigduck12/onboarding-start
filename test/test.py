@@ -148,9 +148,55 @@ async def test_spi(dut):
 
 @cocotb.test()
 async def test_pwm_freq(dut):
+    """Verify that the PWM frequency matches the design spec."""
+    # Assuming a 10MHz clock (100ns) and an 8-bit PWM counter
+    # Expected Period = 100ns * 256 = 25,600 ns
+    
+    clock = Clock(dut.clk, 100, units="ns")
+    cocotb.start_soon(clock.start())
+    
+    dut.rst_n.value = 1
+    dut.ui_in.value = 128 # 50% duty
+    
+    await ClockCycles(dut.clk, 1000)
+    
+    _, period = await measure_pwm(dut, dut.uo_out[0])
+    expected_period = 100 * 256
+    
+    assert abs(period - expected_period) < 1, f"Frequency error! Exp: {expected_period}ns, Got: {period}ns"
     dut._log.info("PWM Frequency test completed successfully")
 
 
 @cocotb.test()
 async def test_pwm_duty(dut):
+    """Test PWM output for various input duty cycle settings."""
+    
+    # Start the clock (e.g., 10MHz)
+    clock = Clock(dut.clk, 100, units="ns") 
+    cocotb.start_soon(clock.start())
+
+    # Reset the DUT
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 10)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 10)
+
+    # Example: PWM controlled by ui_in bits [7:0]
+    test_values = [64, 128, 192] # Roughly 25%, 50%, 75% duty
+    
+    for val in test_values:
+        dut.ui_in.value = val
+        dut._log.info(f"Setting PWM input to {val}")
+        
+        # Wait for the PWM generator to stabilize
+        await ClockCycles(dut.clk, 500)
+        
+        # Measure the output on uo_out[0]
+        duty, period = await measure_pwm(dut, dut.uo_out[0])
+        
+        expected_duty = (val / 256) * 100
+        dut._log.info(f"Measured Duty: {duty:.2f}%, Period: {period}ns")
+        
+        # Assert with a small margin of error for simulation rounding
+        assert abs(duty - expected_duty) < 2.0, f"Duty cycle mismatch! Exp: {expected_duty}, Got: {duty}"
     dut._log.info("PWM Duty Cycle test completed successfully")
