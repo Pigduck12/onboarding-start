@@ -7,18 +7,32 @@ from cocotb.types import Logic
 from cocotb.types import LogicArray
 
 
-async def measure_pwm(dut, signal):
-    """Helper to measure duty cycle and period of a signal."""
-    await RisingEdge(signal)
-    t1 = cocotb.utils.get_sim_time(units="ns")
-    await FallingEdge(signal)
-    t2 = cocotb.utils.get_sim_time(units="ns")
-    await RisingEdge(signal)
-    t3 = cocotb.utils.get_sim_time(units="ns")
-    
+async def wait_for_bit(dut, bit, value):
+    """Wait (clk-synchronous) until uo_out[bit] == value."""
+    while True:
+        await RisingEdge(dut.clk)
+        if int(dut.uo_out.value[bit]) == value:
+            return
+
+async def measure_pwm(dut, bit=0, timeout_cycles=50000):
+    """Measure duty cycle (%) and period (ns) of uo_out[bit] by sampling each clock."""
+    async def next_sample():
+        await RisingEdge(dut.clk)
+        return (int(dut.uo_out.value) >> bit) & 1
+
+    async def wait_for(level):
+        for _ in range(timeout_cycles):
+            if await next_sample() == level:
+                return cocotb.utils.get_sim_time(units="ns")
+        raise AssertionError(f"Timed out waiting for uo_out[{bit}] == {level}")
+
+    await wait_for(0)            # make sure we start from a low level
+    t1 = await wait_for(1)       # rising edge
+    t2 = await wait_for(0)       # falling edge
+    t3 = await wait_for(1)       # next rising edge
+
     period = t3 - t1
-    high_time = t2 - t1
-    duty_cycle = (high_time / period) * 100
+    duty_cycle = (t2 - t1) / period * 100
     return duty_cycle, period
     
 async def await_half_sclk(dut):
@@ -199,7 +213,8 @@ async def test_pwm_duty(dut):
 
     # Example: PWM controlled by ui_in bits [7:0]
     test_values = [64, 128, 192] # Roughly 25%, 50%, 75% duty
-    
+    await send_spi_transaction(dut, 1, 0x00, 0x01)  # output enable bit 0
+    await send_spi_transaction(dut, 1, 0x02, 0x01)  # route bit 0 through PWM
     for val in test_values:
         await send_spi_transaction(dut, 1, 0x04, val) 
         dut._log.info(f"Setting PWM duty cycle to {val}")
