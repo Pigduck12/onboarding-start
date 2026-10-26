@@ -190,7 +190,7 @@ async def test_pwm_freq(dut):
     await send_spi_transaction(dut, 1, 0x04, 128)  # Set 50% duty cycle
     await ClockCycles(dut.clk, 2000)
     
-    _, period = await measure_pwm(dut, dut.uo_out[0])
+    _, period = await measure_pwm(dut)
     expected_period = 100 * 256 * 13
     
     assert abs(period - expected_period) < 1, f"Frequency error! Exp: {expected_period}ns, Got: {period}ns"
@@ -211,10 +211,10 @@ async def test_pwm_duty(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 10)
 
-    # Example: PWM controlled by ui_in bits [7:0]
-    test_values = [64, 128, 192] # Roughly 25%, 50%, 75% duty
     await send_spi_transaction(dut, 1, 0x00, 0x01)  # output enable bit 0
     await send_spi_transaction(dut, 1, 0x02, 0x01)  # route bit 0 through PWM
+    # Example: PWM controlled by ui_in bits [7:0]
+    test_values = [64, 128, 192] # Roughly 25%, 50%, 75% duty
     for val in test_values:
         await send_spi_transaction(dut, 1, 0x04, val) 
         dut._log.info(f"Setting PWM duty cycle to {val}")
@@ -223,7 +223,7 @@ async def test_pwm_duty(dut):
         await ClockCycles(dut.clk, 4000) 
         
         # Measure the output
-        duty, period = await measure_pwm(dut, dut.uo_out[0])
+        duty, period = await measure_pwm(dut)
 
         # ADD THIS LINE: Calculate the expected percentage
         expected_duty = (val / 256) * 100
